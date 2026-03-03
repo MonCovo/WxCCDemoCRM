@@ -3,33 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo CRM</title>
+    <title>Client Management – CRM</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Client Management</h1>
-        <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search...">
-            <select id="filter-select">
-                <option value="all">All Fields</option>
-                <option value="firstname">First Name</option>
-                <option value="lastname">Last Name</option>
-                <option value="username">Username</option>
-                <option value="number">Phone Number</option>
-                <option value="purchaseorder">Purchase Order</option>
-                <option value="purchasenumber">Purchase Number</option>
-                <option value="orderref">Order Reference</option>
-                <option value="carreg">Car Registration</option>
-                <option value="journeystate">Journey State</option>
-            </select>
-            <button id="search-button">Search</button>
-        </div>
-        <div id="client-list">
-            <!-- Client data will be inserted here by JavaScript -->
-        </div>
+    <div class="app">
+        <header class="app-header">
+            <h1 class="app-title">Client Management</h1>
+            <div class="toolbar">
+                <div class="search-wrap">
+                    <span class="search-icon" aria-hidden="true"></span>
+                    <input type="search" id="search-input" class="input search-input" placeholder="Search clients…" autocomplete="off">
+                </div>
+                <select id="filter-select" class="input input--select" aria-label="Filter by field">
+                    <option value="all">All fields</option>
+                    <option value="firstName">First name</option>
+                    <option value="lastName">Last name</option>
+                    <option value="userName">Username</option>
+                    <option value="phoneNumber">Phone</option>
+                    <option value="purchaseOrder">Purchase order</option>
+                    <option value="purchaseNumber">Purchase number</option>
+                    <option value="orderRef">Order reference</option>
+                    <option value="carReg">Car registration</option>
+                    <option value="journeyState">Journey state</option>
+                </select>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div id="client-list" class="client-list" role="list">
+                <!-- Client cards injected by script -->
+            </div>
+            <div id="loading" class="state state--loading" role="status" aria-live="polite" hidden>
+                <div class="spinner" aria-hidden="true"></div>
+                <p>Loading clients…</p>
+            </div>
+            <div id="empty" class="state state--empty" hidden>
+                <p>No clients match your search.</p>
+            </div>
+        </main>
+
+        <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden>Copied</div>
     </div>
     <script src="script.js"></script>
 </body>
