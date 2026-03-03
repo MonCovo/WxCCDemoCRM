@@ -1,18 +1,18 @@
 document.addEventListener('DOMContentLoaded', function () {
-    fetchClientData();
-    initializeSortable();
+    var listEl = document.getElementById('client-list');
     var searchInput = document.getElementById('search-input');
     var filterSelect = document.getElementById('filter-select');
-    searchInput.addEventListener('input', runSearch);
-    searchInput.addEventListener('keydown', function (e) {
+    if (searchInput) searchInput.addEventListener('input', runSearch);
+    if (searchInput) searchInput.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             searchInput.value = '';
             runSearch();
             searchInput.blur();
         }
     });
-    filterSelect.addEventListener('change', runSearch);
-    document.getElementById('client-list').addEventListener('click', handleCardClick);
+    if (filterSelect) filterSelect.addEventListener('change', runSearch);
+    if (listEl) listEl.addEventListener('click', handleCardClick);
+    fetchClientData();
 });
 
 var clientsData = [];
@@ -33,38 +33,47 @@ function fetchClientData() {
     var listEl = document.getElementById('client-list');
     var loadingEl = document.getElementById('loading');
     var emptyEl = document.getElementById('empty');
+    if (!listEl || !loadingEl) return;
     listEl.innerHTML = '';
     listEl.hidden = true;
-    emptyEl.hidden = true;
+    if (emptyEl) emptyEl.hidden = true;
     loadingEl.hidden = false;
 
     fetch('https://65410dfe45bedb25bfc3281a.mockapi.io/WxCC/customer')
-        .then(function (res) { return res.json(); })
+        .then(function (res) {
+            if (!res.ok) throw new Error('Network response was not ok: ' + res.status);
+            return res.json();
+        })
         .then(function (data) {
-            data.sort(function (a, b) { return Number(a.id) - Number(b.id); });
-            clientsData = data;
+            var list = Array.isArray(data) ? data : (data && data.data && Array.isArray(data.data) ? data.data : []);
+            list.sort(function (a, b) { return Number(a.id) - Number(b.id); });
+            clientsData = list;
             runSearch();
+            initializeSortable();
         })
         .catch(function (err) {
             console.error('Error fetching client data:', err);
             loadingEl.hidden = true;
             listEl.hidden = false;
-            listEl.innerHTML = '<p class="state state--empty">Failed to load clients. Please try again.</p>';
+            listEl.innerHTML = '<p class="state state--empty">Failed to load clients. Check the console or try again.</p>';
+            if (emptyEl) emptyEl.hidden = true;
         });
 }
 
 function runSearch() {
     var searchInput = document.getElementById('search-input');
     var filterSelect = document.getElementById('filter-select');
-    var query = (searchInput.value || '').trim().toLowerCase();
-    var filterKey = filterSelect.value;
+    var query = searchInput ? (searchInput.value || '').trim().toLowerCase() : '';
+    var filterKey = filterSelect ? filterSelect.value : 'all';
     var listEl = document.getElementById('client-list');
     var loadingEl = document.getElementById('loading');
     var emptyEl = document.getElementById('empty');
 
-    loadingEl.hidden = true;
+    if (loadingEl) loadingEl.hidden = true;
+    if (!listEl) return;
 
-    var filtered = clientsData.filter(function (client) {
+    var data = Array.isArray(clientsData) ? clientsData : [];
+    var filtered = data.filter(function (client) {
         if (!query) return true;
         if (filterKey === 'all') {
             return Object.values(client).some(function (v) {
@@ -77,15 +86,18 @@ function runSearch() {
 
     displayClients(filtered, listEl);
     listEl.hidden = false;
-    emptyEl.hidden = filtered.length > 0;
+    if (emptyEl) emptyEl.hidden = filtered.length > 0;
 }
 
 function displayClients(data, containerEl) {
     containerEl = containerEl || document.getElementById('client-list');
+    if (!containerEl) return;
     containerEl.innerHTML = '';
     var list = containerEl;
+    var items = Array.isArray(data) ? data : [];
 
-    data.forEach(function (client) {
+    items.forEach(function (client) {
+        if (!client || typeof client !== 'object') return;
         var name = [client.salutation, client.firstName, client.lastName].filter(Boolean).join(' ').trim() || 'Unknown';
         var initial = (client.firstName || name).charAt(0).toUpperCase();
 
@@ -170,10 +182,15 @@ function showToast(message) {
     }, 2000);
 }
 
+var sortableInstance = null;
+
 function initializeSortable() {
     var list = document.getElementById('client-list');
     if (!list || typeof Sortable === 'undefined') return;
-    new Sortable(list, {
+    if (sortableInstance) {
+        try { sortableInstance.destroy(); } catch (e) {}
+    }
+    sortableInstance = new Sortable(list, {
         animation: 150,
         ghostClass: 'sortable-ghost',
         onEnd: function () { /* optional: persist order */ }
