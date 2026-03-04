@@ -1,78 +1,104 @@
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page has loaded');
-    fetchClientData();
-    initializeSortable();
-    document.getElementById('search-button').addEventListener('click', searchClients);
+var clients = [];
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('search').addEventListener('input', filter);
+    document.getElementById('filter').addEventListener('change', filter);
+    loadClients();
 });
 
-let clientsData = [];
+function loadClients() {
+    var loading = document.getElementById('loading');
+    var list = document.getElementById('client-list');
+    var empty = document.getElementById('empty');
 
-function fetchClientData() {
-    fetch('https://65410dfe45bedb25bfc3281a.mockapi.io/WxCC/customer')
-        .then(response => response.json())
-        .then(data => {
-            // Sort data by id
-            data.sort((a, b) => a.id - b.id);
-            clientsData = data;
-            displayClients(data);
+    loading.classList.remove('hidden');
+    list.innerHTML = '';
+    empty.classList.add('hidden');
+
+    fetch('https://65410dfe45bedb25bfc3281a.mockapi.io/WxCC/customer', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            clients = Array.isArray(data) ? data : [];
+            clients.sort(function (a, b) { return (a.id || 0) - (b.id || 0); });
+            loading.classList.add('hidden');
+            filter();
         })
-        .catch(error => console.error('Error fetching client data:', error));
+        .catch(function (err) {
+            loading.classList.add('hidden');
+            list.innerHTML = '<p class="error">Failed to load clients.</p>';
+            console.error(err);
+        });
 }
 
-function displayClients(data) {
-    const clientList = document.getElementById('client-list');
-    clientList.innerHTML = ''; // Clear any existing content
-    data.forEach(client => {
-        const clientBox = document.createElement('div');
-        clientBox.className = 'client-box';
-        clientBox.innerHTML = `
-            <i class="fas fa-user icon"></i>
-            <div>
-                <h2>${client.salutation} ${client.firstName} ${client.lastName}</h2>
-                <p><strong>Username:</strong> ${client.userName} <button class="copy-button" onclick="copyToClipboard('${client.userName}')">Copy</button></p>
-                <p><strong>Phone:</strong> ${client.phoneNumber} <button class="copy-button" onclick="copyToClipboard('${client.phoneNumber}')">Copy</button> <button class="call-button" onclick="callNumber('${client.phoneNumber}')">Call</button></p>
-                <p><strong>Purchase Order:</strong> ${client.purchaseOrder} <button class="copy-button" onclick="copyToClipboard('${client.purchaseOrder}')">Copy</button></p>
-                <p><strong>Purchase Number:</strong> ${client.purchaseNumber} <button class="copy-button" onclick="copyToClipboard('${client.purchaseNumber}')">Copy</button></p>
-                <p><strong>Order Reference:</strong> ${client.orderRef} <button class="copy-button" onclick="copyToClipboard('${client.orderRef}')">Copy</button></p>
-                <p><strong>Car Registration:</strong> ${client.carReg} <button class="copy-button" onclick="copyToClipboard('${client.carReg}')">Copy</button></p>
-                <p><strong>Journey State:</strong> ${client.journeyState} <button class="copy-button" onclick="copyToClipboard('${client.journeyState}')">Copy</button></p>
-            </div>
-        `;
-        clientList.appendChild(clientBox);
-    });
-}
+function filter() {
+    var q = (document.getElementById('search').value || '').toLowerCase().trim();
+    var key = document.getElementById('filter').value;
+    var list = document.getElementById('client-list');
+    var empty = document.getElementById('empty');
 
-function initializeSortable() {
-    new Sortable(document.getElementById('client-list'), {
-        animation: 150,
-        ghostClass: 'sortable-ghost',
-        onEnd: function (/**Event*/evt) {
-            console.log('Item moved', evt);
+    var filtered = clients.filter(function (c) {
+        if (!q) return true;
+        if (key === 'all') {
+            return Object.values(c).some(function (v) {
+                return String(v || '').toLowerCase().indexOf(q) !== -1;
+            });
         }
+        return String(c[key] || '').toLowerCase().indexOf(q) !== -1;
+    });
+
+    list.innerHTML = '';
+    if (filtered.length === 0) {
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+
+    filtered.forEach(function (c) {
+        var name = [c.salutation, c.firstName, c.lastName].filter(Boolean).join(' ').trim() || 'Unknown';
+        var card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+            '<div class="card-header">' +
+            '<i class="icon icon-contact-card_24"></i>' +
+            '<strong>' + escapeHtml(name) + '</strong>' +
+            '</div>' +
+            '<div class="card-body">' +
+            row('Username', c.userName, true, false) +
+            row('Phone', c.phoneNumber, true, true) +
+            row('Purchase Order', c.purchaseOrder, true, false) +
+            row('Purchase Number', c.purchaseNumber, true, false) +
+            row('Order Ref', c.orderRef, true, false) +
+            row('Car Reg', c.carReg, true, false) +
+            row('Journey State', c.journeyState, false, false) +
+            '</div>';
+        list.appendChild(card);
     });
 }
 
-function searchClients() {
-    const searchInput = document.getElementById('search-input').value.toLowerCase();
-    const filterSelect = document.getElementById('filter-select').value;
-    const filteredClients = clientsData.filter(client => {
-        if (filterSelect === 'all') {
-            return Object.values(client).some(value => value.toString().toLowerCase().includes(searchInput));
-        } else {
-            return client[filterSelect].toString().toLowerCase().includes(searchInput);
-        }
-    });
-    displayClients(filteredClients);
+function row(label, value, hasCopy, hasCall) {
+    var v = value != null ? escapeHtml(String(value)) : '—';
+    var copyBtn = hasCopy && value ? '<button class="btn" onclick="copy(\'' + escapeAttr(value) + '\')"><i class="icon icon-copy_14"></i> Copy</button>' : '';
+    var callBtn = hasCall && value ? '<a class="btn btn--primary" href="tel:' + escapeAttr(value) + '"><i class="icon icon-deskphone_16"></i> Call</a>' : '';
+    return '<p><span class="label">' + escapeHtml(label) + '</span><span class="value">' + v + '</span>' + copyBtn + callBtn + '</p>';
 }
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Copied to clipboard');
-    }).catch(err => {
-        console.error('Error copying to clipboard:', err);
-    });
+function escapeHtml(s) {
+    if (s == null) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
 }
 
-function callNumber(number) {
-    window.location.href = `tel:${number}`;
+function escapeAttr(s) {
+    if (s == null) return '';
+    return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function copy(text) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(function () {
+        alert('Copied');
+    }).catch(function () {
+        alert('Copy failed');
+    });
 }
