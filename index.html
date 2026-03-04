@@ -3,33 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo CRM</title>
+    <title>Client Management – CRM</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@momentum-ui/icons@8.33.0/css/momentum-ui-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <h1>Client Management</h1>
-        <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search...">
-            <select id="filter-select">
-                <option value="all">All Fields</option>
-                <option value="firstname">First Name</option>
-                <option value="lastname">Last Name</option>
-                <option value="username">Username</option>
-                <option value="number">Phone Number</option>
-                <option value="purchaseorder">Purchase Order</option>
-                <option value="purchasenumber">Purchase Number</option>
-                <option value="orderref">Order Reference</option>
-                <option value="carreg">Car Registration</option>
-                <option value="journeystate">Journey State</option>
+        <div class="toolbar">
+            <div class="search-wrap">
+                <i class="icon icon-ch-p-search_20"></i>
+                <input type="text" id="search" placeholder="Search clients…" autocomplete="off">
+            </div>
+            <select id="filter">
+                <option value="all">All fields</option>
+                <option value="firstName">First name</option>
+                <option value="lastName">Last name</option>
+                <option value="userName">Username</option>
+                <option value="phoneNumber">Phone</option>
+                <option value="purchaseOrder">Purchase order</option>
+                <option value="purchaseNumber">Purchase number</option>
+                <option value="orderRef">Order reference</option>
+                <option value="carReg">Car registration</option>
+                <option value="journeyState">Journey state</option>
             </select>
-            <button id="search-button">Search</button>
         </div>
-        <div id="client-list">
-            <!-- Client data will be inserted here by JavaScript -->
-        </div>
+        <div id="loading"><i class="icon icon-spinner_16 icon-spin"></i> Loading clients…</div>
+        <div id="client-list"></div>
+        <div id="empty" class="hidden"><i class="icon icon-info_16"></i> No clients match your search.</div>
     </div>
     <script src="script.js"></script>
 </body>
