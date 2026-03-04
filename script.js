@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (filterSelect) filterSelect.addEventListener('change', runSearch);
     if (listEl) listEl.addEventListener('click', handleCardClick);
 
-    fetch('https://65410dfe45bedb25bfc3281a.mockapi.io/WxCC/customer')
+    fetch('https://65410dfe45bedb25bfc3281a.mockapi.io/WxCC/customer', { cache: 'no-store' })
         .then(function (res) { return res.json(); })
         .then(function (data) {
             clientsData = Array.isArray(data) ? data : [];
